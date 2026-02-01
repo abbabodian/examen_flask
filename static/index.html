@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart-Recruit - Gestion de Recrutement IA</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        mint: {
+                            50: '#f0fdf9',
+                            100: '#ccfbef',
+                            200: '#99f6e0',
+                            300: '#5fe9ce',
+                            400: '#2dd4b7',
+                            500: '#14b89f',
+                            600: '#0d9482',
+                            700: '#0f766b',
+                            800: '#115e56',
+                            900: '#134d47',
+                        },
+                        coral: {
+                            50: '#fff5f5',
+                            100: '#ffe3e3',
+                            200: '#ffc9c9',
+                            300: '#ffa8a8',
+                            400: '#ff6b6b',
+                            500: '#fa5252',
+                            600: '#f03e3e',
+                            700: '#e03131',
+                            800: '#c92a2a',
+                            900: '#a51d1d',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        * {
+            font-family: 'Poppins', sans-serif;
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #14b89f 0%, #0d9482 50%, #f03e3e 100%);
+        }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #14b89f, #f03e3e);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        
+        .floating {
+            animation: floating 3s ease-in-out infinite;
+        }
+        
+        @keyframes floating {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .pulse-glow {
+            animation: pulse-glow 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(20, 184, 159, 0.4); }
+            50% { box-shadow: 0 0 40px rgba(20, 184, 159, 0.8); }
+        }
+        
+        .slide-in {
+            animation: slideIn 0.5s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.3s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .tech-pattern {
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%2314b89f' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+        
+        .nav-btn {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .nav-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+        
+        .nav-btn:hover::before {
+            left: 100%;
+        }
+        
+        .input-focus {
+            transition: all 0.3s ease;
+        }
+        
+        .input-focus:focus {
+            border-color: #14b89f;
+            box-shadow: 0 0 0 3px rgba(20, 184, 159, 0.2);
+        }
+        
+        .loading-spinner {
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        .status-online {
+            animation: blink 2s ease-in-out infinite;
+        }
+        
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Scrollbar personnalisée */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #14b89f, #0d9482);
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, #0d9482, #14b89f);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 tech-pattern min-h-screen">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-xl sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-3">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="w-12 h-12 gradient-bg rounded-xl flex items-center justify-center floating">
+                        <i class="fas fa-brain text-white text-2xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-bold gradient-text">Smart-Recruit</h1>
+                        <div class="flex items-center space-x-2">
+                            <span id="api-status" class="w-2 h-2 bg-gray-400 rounded-full"></span>
+                            <p class="text-xs text-gray-500" id="api-status-text">Connexion...</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex space-x-2">
+                    <button onclick="showSection('candidats')" id="btn-candidats" class="nav-btn bg-mint-500 text-white hover:bg-mint-600 px-5 py-2.5 rounded-xl font-medium transition-all flex items-center space-x-2">
+                        <i class="fas fa-users"></i>
+                        <span>Candidats</span>
+                        <span id="badge-candidats" class="bg-white/20 px-2 py-0.5 rounded-full text-xs">0</span>
+                    </button>
+                    <button onclick="showSection('offres')" id="btn-offres" class="nav-btn bg-white text-gray-600 hover:bg-mint-50 px-5 py-2.5 rounded-xl font-medium transition-all flex items-center space-x-2 border-2 border-gray-200">
+                        <i class="fas fa-clipboard-list"></i>
+                        <span>Offres</span>
+                        <span id="badge-offres" class="bg-gray-200 px-2 py-0.5 rounded-full text-xs">0</span>
+                    </button>
+                    <button onclick="showSection('analyse')" id="btn-analyse" class="nav-btn bg-white text-gray-600 hover:bg-coral-50 px-5 py-2.5 rounded-xl font-medium transition-all flex items-center space-x-2 border-2 border-gray-200">
+                        <i class="fas fa-robot"></i>
+                        <span>Analyse IA</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <div class="gradient-bg text-white py-12 mb-8">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-col md:flex-row items-center justify-between">
+                <div class="md:w-1/2 mb-8 md:mb-0">
+                    <h2 class="text-4xl md:text-5xl font-bold mb-4">
+                        Recrutez les meilleurs talents
+                    </h2>
+                    <p class="text-xl opacity-90 mb-6">
+                        Utilisez l'intelligence artificielle pour trouver les candidats parfaits pour vos offres d'emploi.
+                    </p>
+                    <div class="flex flex-wrap gap-4">
+                        <div class="bg-white/20 backdrop-blur-sm rounded-xl px-4 py-3 flex items-center space-x-2">
+                            <i class="fas fa-check-circle text-2xl"></i>
+                            <span>Analyse IA</span>
+                        </div>
+                        <div class="bg-white/20 backdrop-blur-sm rounded-xl px-4 py-3 flex items-center space-x-2">
+                            <i class="fas fa-bolt text-2xl"></i>
+                            <span>Rapide</span>
+                        </div>
+                        <div class="bg-white/20 backdrop-blur-sm rounded-xl px-4 py-3 flex items-center space-x-2">
+                            <i class="fas fa-shield-alt text-2xl"></i>
+                            <span>Fiable</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="md:w-1/2 flex justify-center">
+                    <div class="relative">
+                        <img src="https://images.unsplash.com/photo-1551434678-e076c223a692?w=500&h=350&fit=crop" 
+                             alt="Team working" 
+                             class="rounded-2xl shadow-2xl floating">
+                        <div class="absolute -bottom-4 -right-4 bg-white rounded-xl p-4 shadow-xl">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-12 h-12 bg-mint-500 rounded-full flex items-center justify-center">
+                                    <i class="fas fa-chart-line text-white text-xl"></i>
+                                </div>
+                                <div>
+                                    <p class="text-gray-800 font-bold" id="stat-matching">+85%</p>
+                                    <p class="text-gray-500 text-sm">Matching précis</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container mx-auto px-4 pb-12">
+        <!-- ========== Section Candidats ========== -->
+        <div id="section-candidats" class="section slide-in">
+            <div class="grid md:grid-cols-2 gap-8">
+                <!-- Formulaire Candidat -->
+                <div class="bg-white rounded-2xl shadow-xl p-8 card-hover border-t-4 border-mint-500">
+                    <div class="flex items-center space-x-4 mb-6">
+                        <div class="w-14 h-14 bg-mint-100 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-user-plus text-mint-600 text-2xl"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-2xl font-bold text-gray-800">Nouveau Candidat</h2>
+                            <p class="text-gray-500">Ajoutez un profil candidat</p>
+                        </div>
+                    </div>
+                    
+                    <form id="form-candidat" class="space-y-5">
+                        <div>
+                            <label class="block text-gray-700 font-medium mb-2">
+                                <i class="fas fa-user text-mint-500 mr-2"></i>Nom complet *
+                            </label>
+                            <input type="text" id="candidat-nom" required
+                                class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl input-focus outline-none"
+                                placeholder="Ex: Alice Dupont">
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 font-medium mb-2">
+                                <i class="fas fa-envelope text-mint-500 mr-2"></i>Email *
+                            </label>
+                            <input type="email" id="candidat-email" required
+                                class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl input-focus outline-none"
+                                placeholder="alice.dupont@email.com">
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 font-medium mb-2">
+                                <i class="fas fa-file-alt text-mint-500 mr-2"></i>Bio / Parcours *
+                            </label>
+                            <textarea id="candidat-bio" required rows="3"
+                                class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl input-focus outline-none resize-none"
+                                placeholder="Développeuse Full Stack avec 5 ans d'expérience en Python, JavaScript..."></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 font-medium mb-2">
+                                <i class="fas fa-graduation-cap text-mint-500 mr-2"></i>Diplôme *
+                            </label>
+                            <input type="text" id="candidat-diplome" required
+                                class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl input-focus outline-none"
+                                placeholder="Ex: Master Informatique">
+                        </div>
+                        <button type="submit" id="btn-submit-candidat" class="w-full bg-gradient-to-r from-mint-500 to-mint-600 text-white py-4 rounded-xl hover:from-mint-600 hover:to-mint-700 transition font-semibold text-lg shadow-lg shadow-mint-500/30 flex items-center justify-center space-x-2">
+                            <i class="fas fa-plus-circle"></i>
+                            <span>Créer le Candidat</span>
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Liste des Candidats -->
+                <div class="bg-white rounded-2xl shadow-xl p-8 card-hover">
+                    <div class="flex items-center justify-between mb-6">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-14 h-14 bg-coral-100 rounded-xl flex items-center justify-center">
+                                <i class="fas fa-users text-coral-600 text-2xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-2xl font-bold text-gray-800">Candidats</h3>
+                                <p class="text-gray-500">Liste des profils</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <button onclick="chargerCandidats()" class="p-2 hover:bg-gray-100 rounded-lg transition" title="Rafraîchir">
+                                <i class="fas fa-sync-alt text-gray-500"></i>
+                            </button>
+                            <span id="count-candidats" class="bg-mint-100 text-mint-700 px-4 py-2 rounded-full font-bold">0</span>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <div class="relative">
+                            <input type="text" id="search-candidats" placeholder="Rechercher un candidat..."
+                                class="w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-xl input-focus outline-none"
+                                onkeyup="filtrerCandidats()">
+                            <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                        </div>
+                    </div>
+                    
+                    <div id="liste-candidats" class="space-y-4 max-h-[500px] overflow-y-auto pr-2">
+                        <!-- Liste générée dynamiquement -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== Section Offres ========== -->
+        <div id="section-offres" class="section hidden slide-in">
+            <div class="grid md:grid-cols-2 gap-8">
+                <!-- Formulaire Offre -->
+                <div class="bg-white rounded-2xl shadow-xl p-8 card-hover border-t-4 border-coral-500">
+                    <div class="flex items-center space-x-4 mb-6">
+                        <div class="w-14 h-14 bg-coral-100 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-briefcase text-coral-600 text-2xl"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-2xl font-bold text-gray-800">Nouvelle Offre</h2>
+                            <p class="text-gray-500">Créez une offre d'emploi</p>
+                        </div>
+                    </div>
+                    
+                    <form id="form-offre" class="space-y-5">
+                        <div>
+                            <label class="block text-gray-700 font-medium mb-2">
+                                <i class="fas fa-tag text-coral-500 mr-2"></i>Titre du poste *
+                            </label>
+                            <input type="text" id="offre-titre" required
+                                class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl input-focus outline-none"
+                                placeholder="Ex: Développeur Full Stack Python">
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 font-medium mb-2">
+                                <i class="fas fa-align-left text-coral-500 mr-2"></i>Description *
+                            </label>
+                            <textarea id="offre-description" required rows="3"
+                                class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl input-focus outline-none resize-none"
+                                placeholder="Nous recherchons un développeur passionné..."></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 font-medium mb-2">
+                                <i class="fas fa-code text-coral-500 mr-2"></i>Compétences requises *
+                            </label>
+                            <input type="text" id="offre-competences" required
+                                class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl input-focus outline-none"
+                                placeholder="Python, Flask, PostgreSQL, React (séparées par des virgules)">
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 font-medium mb-2">
+                                <i class="fas fa-money-bill-wave text-coral-500 mr-2"></i>Salaire (FCFA) *
+                            </label>
+                            <input type="number" id="offre-salaire" required min="0"
+                                class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl input-focus outline-none"
+                                placeholder="Ex: 500000">
+                        </div>
+                        <button type="submit" id="btn-submit-offre" class="w-full bg-gradient-to-r from-coral-500 to-coral-600 text-white py-4 rounded-xl hover:from-coral-600 hover:to-coral-700 transition font-semibold text-lg shadow-lg shadow-coral-500/30 flex items-center justify-center space-x-2">
+                            <i class="fas fa-plus-circle"></i>
+                            <span>Publier l'Offre</span>
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Liste des Offres -->
+                <div class="bg-white rounded-2xl shadow-xl p-8 card-hover">
+                    <div class="flex items-center justify-between mb-6">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-14 h-14 bg-mint-100 rounded-xl flex items-center justify-center">
+                                <i class="fas fa-clipboard-list text-mint-600 text-2xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-2xl font-bold text-gray-800">Offres</h3>
+                                <p class="text-gray-500">Postes disponibles</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <button onclick="chargerOffres()" class="p-2 hover:bg-gray-100 rounded-lg transition" title="Rafraîchir">
+                                <i class="fas fa-sync-alt text-gray-500"></i>
+                            </button>
+                            <span id="count-offres" class="bg-coral-100 text-coral-700 px-4 py-2 rounded-full font-bold">0</span>
+                        </div>
+                    </div>
+                    
+                    <div id="liste-offres" class="space-y-4 max-h-[500px] overflow-y-auto pr-2">
+                        <!-- Liste générée dynamiquement -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== Section Analyse IA ========== -->
+        <div id="section-analyse" class="section hidden slide-in">
+            <div class="grid md:grid-cols-3 gap-8">
+                <!-- Panel Analyse -->
+                <div class="md:col-span-2 bg-white rounded-2xl shadow-xl p-8 card-hover">
+                    <div class="flex items-center space-x-4 mb-6">
+                        <div class="w-14 h-14 bg-gradient-to-br from-mint-500 to-coral-500 rounded-xl flex items-center justify-center pulse-glow">
+                            <i class="fas fa-robot text-white text-2xl"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-2xl font-bold text-gray-800">Analyse IA</h2>
+                            <p class="text-gray-500">Évaluez la compatibilité candidat-offre</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-gradient-to-r from-mint-50 to-coral-50 rounded-xl p-6 mb-6">
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-gray-700 font-medium mb-2">
+                                    <i class="fas fa-briefcase text-coral-500 mr-2"></i>Sélectionner une Offre
+                                </label>
+                                <select id="analyse-offre" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl bg-white input-focus outline-none cursor-pointer">
+                                    <option value="">-- Choisir une offre --</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-gray-700 font-medium mb-2">
+                                    <i class="fas fa-user text-mint-500 mr-2"></i>Sélectionner un Candidat
+                                </label>
+                                <select id="analyse-candidat" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl bg-white input-focus outline-none cursor-pointer">
+                                    <option value="">-- Choisir un candidat --</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button onclick="analyserCompatibilite()" id="btn-analyser" class="w-full mt-6 bg-gradient-to-r from-mint-500 via-mint-600 to-coral-500 text-white py-4 rounded-xl font-semibold text-lg shadow-xl hover:shadow-2xl transition-all transform hover:scale-[1.02] flex items-center justify-center space-x-2">
+                            <i class="fas fa-magic"></i>
+                            <span>Lancer l'Analyse IA</span>
+                        </button>
+                    </div>
+
+                    <div id="resultat-analyse" class="hidden">
+                        <!-- Résultats de l'analyse -->
+                    </div>
+                </div>
+
+                <!-- Panel Stats -->
+                <div class="space-y-6">
+                    <div class="bg-white rounded-2xl shadow-xl p-6 card-hover">
+                        <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=200&fit=crop" 
+                             alt="Analytics" class="w-full h-32 object-cover rounded-xl mb-4">
+                        <h4 class="font-bold text-gray-800 mb-2">Analyse en temps réel</h4>
+                        <p class="text-gray-500 text-sm">Notre IA analyse les compétences et l'expérience pour trouver le meilleur match.</p>
+                    </div>
+                    
+                    <div class="bg-gradient-to-br from-mint-500 to-mint-600 rounded-2xl shadow-xl p-6 text-white">
+                        <div class="flex items-center justify-between mb-4">
+                            <i class="fas fa-chart-pie text-4xl opacity-80"></i>
+                            <span class="text-4xl font-bold">95%</span>
+                        </div>
+                        <p class="font-medium">Précision de matching</p>
+                    </div>
+                    
+                    <div class="bg-gradient-to-br from-coral-500 to-coral-600 rounded-2xl shadow-xl p-6 text-white">
+                        <div class="flex items-center justify-between mb-4">
+                            <i class="fas fa-clock text-4xl opacity-80"></i>
+                            <span class="text-4xl font-bold">2s</span>
+                        </div>
+                        <p class="font-medium">Temps d'analyse moyen</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Candidatures par Offre -->
+            <div class="bg-white rounded-2xl shadow-xl p-8 mt-8 card-hover">
+                <div class="flex items-center space-x-4 mb-6">
+                    <div class="w-14 h-14 bg-mint-100 rounded-xl flex items-center justify-center">
+                        <i class="fas fa-users-cog text-mint-600 text-2xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-2xl font-bold text-gray-800">Candidatures par Offre</h3>
+                        <p class="text-gray-500">Visualisez les candidats par poste</p>
+                    </div>
+                </div>
+                
+                <div class="bg-gray-50 rounded-xl p-4 mb-4">
+                    <label class="block text-gray-700 font-medium mb-2">Filtrer par offre :</label>
+                    <select id="offre-candidatures" onchange="voirCandidatures()" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl bg-white input-focus outline-none cursor-pointer">
+                        <option value="">-- Toutes les offres --</option>
+                    </select>
+                </div>
+                
+                <div id="liste-candidatures" class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div class="col-span-full text-center py-12 text-gray-400">
+                        <i class="fas fa-search text-6xl mb-4"></i>
+                        <p>Sélectionnez une offre pour voir les candidatures</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Postuler à une offre -->
+            <div class="bg-white rounded-2xl shadow-xl p-8 mt-8 card-hover border-t-4 border-mint-500">
+                <div class="flex items-center space-x-4 mb-6">
+                    <div class="w-14 h-14 bg-gradient-to-br from-mint-500 to-coral-500 rounded-xl flex items-center justify-center">
+                        <i class="fas fa-paper-plane text-white text-2xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-2xl font-bold text-gray-800">Postuler à une Offre</h3>
+                        <p class="text-gray-500">Associer un candidat à une offre</p>
+                    </div>
+                </div>
+                
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-2">
+                            <i class="fas fa-briefcase text-coral-500 mr-2"></i>Offre
+                        </label>
+                        <select id="postuler-offre" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl bg-white input-focus outline-none cursor-pointer">
+                            <option value="">-- Choisir une offre --</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-2">
+                            <i class="fas fa-user text-mint-500 mr-2"></i>Candidat
+                        </label>
+                        <select id="postuler-candidat" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl bg-white input-focus outline-none cursor-pointer">
+                            <option value="">-- Choisir un candidat --</option>
+                        </select>
+                    </div>
+                </div>
+                <button onclick="postulerOffre()" class="w-full mt-6 bg-gradient-to-r from-mint-500 to-coral-500 text-white py-4 rounded-xl font-semibold text-lg shadow-xl hover:shadow-2xl transition-all transform hover:scale-[1.02] flex items-center justify-center space-x-2">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Envoyer la Candidature</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-8 mt-12">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-col md:flex-row items-center justify-between">
+                <div class="flex items-center space-x-3 mb-4 md:mb-0">
+                    <div class="w-10 h-10 gradient-bg rounded-lg flex items-center justify-center">
+                        <i class="fas fa-brain text-white"></i>
+                    </div>
+                    <span class="text-xl font-bold">Smart-Recruit</span>
+                </div>
+                <div class="text-gray-400 text-sm">
+                    <span id="stats-footer">Chargement des statistiques...</span>
+                </div>
+                <div class="flex space-x-6">
+                    <a href="#" class="hover:text-mint-400 transition"><i class="fab fa-linkedin text-2xl"></i></a>
+                    <a href="#" class="hover:text-mint-400 transition"><i class="fab fa-twitter text-2xl"></i></a>
+                    <a href="#" class="hover:text-mint-400 transition"><i class="fab fa-github text-2xl"></i></a>
+                </div>
+            </div>
+            <div class="text-center mt-6 text-gray-400 text-sm">
+                © 2024 Smart-Recruit. Tous droits réservés. Propulsé par l'IA.
+            </div>
+        </div>
+    </footer>
+
+    <!-- Notifications Toast -->
+    <div id="toast" class="fixed top-4 right-4 z-50 hidden"></div>
+
+    <!-- Modal de confirmation -->
+    <div id="modal-confirm" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center">
+        <div class="bg-white rounded-2xl p-8 max-w-md mx-4 shadow-2xl">
+            <div class="text-center">
+                <div class="w-16 h-16 bg-coral-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-exclamation-triangle text-coral-500 text-3xl"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-800 mb-2" id="modal-title">Confirmer la suppression</h3>
+                <p class="text-gray-500 mb-6" id="modal-message">Êtes-vous sûr de vouloir supprimer cet élément ?</p>
+                <div class="flex space-x-4">
+                    <button onclick="closeModal()" class="flex-1 px-6 py-3 border-2 border-gray-200 rounded-xl font-medium hover:bg-gray-50 transition">
+                        Annuler
+                    </button>
+                    <button onclick="confirmAction()" id="modal-confirm-btn" class="flex-1 px-6 py-3 bg-coral-500 text-white rounded-xl font-medium hover:bg-coral-600 transition">
+                        Confirmer
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script principal -->
+    <script src="app.js"></script>
+</body>
+</html>

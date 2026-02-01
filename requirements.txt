@@ -18,3 +18,4 @@ typing-extensions
 charset-normalizer
 idna
 urllib3
+flask-cors==4.0.0

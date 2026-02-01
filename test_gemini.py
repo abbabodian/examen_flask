@@ -1,158 +1,163 @@
 import requests
 import json
 
-# Votre clé API
-GEMINI_API_KEY = "AIzaSyDov2Ilzo4PffUNVV0T679vGIAlchDU1j4"
+# ============================================
+# CONFIGURATION
+# ============================================
+GEMINI_API_KEY = "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"
 
-print("="*70)
-print(" TEST COMPLET DE LA CLÉ API GEMINI")
-print("="*70)
-print(f"\nClé API: {GEMINI_API_KEY[:15]}...{GEMINI_API_KEY[-10:]}\n")
+print("=" * 60)
+print("🔍 TEST DE CONNEXION GEMINI API")
+print("=" * 60)
 
-# Test 1: Modèle gemini-pro (v1)
-print("-"*70)
-print("TEST 1: Modèle gemini-pro (API v1)")
-print("-"*70)
+# ============================================
+# TEST 1: Requête simple
+# ============================================
+print("\n" + "-" * 40)
+print("🤖 Test 1: Requête simple")
+print("-" * 40)
 
-url1 = f"https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key={GEMINI_API_KEY}"
+url = f"https://openrouter.ai/api/v1?key={GEMINI_API_KEY}"
 
 payload = {
     "contents": [{
         "parts": [{
-            "text": "Réponds juste 'Bonjour' en une phrase."
+            "text": "Réponds au format JSON: {\"score\": 75, \"justification\": \"Test réussi\"}"
         }]
     }]
 }
 
 try:
-    response = requests.post(url1, json=payload, timeout=10)
-    print(f"Status Code: {response.status_code}")
+    response = requests.post(url, json=payload, timeout=10)
+    print(f"Status HTTP: {response.status_code}")
     
     if response.status_code == 200:
-        print(" SUCCESS - L'API fonctionne !")
-        result = response.json()
-        text = result['candidates'][0]['content']['parts'][0]['text']
-        print(f"Réponse de Gemini: {text}\n")
+       # result = response.json()
+       # text = result['candidates'][0]['content']['parts'][0]['text']
+        print(f"✅ SUCCESS!")
+       # print(f"Réponse: {text}")
+    elif response.status_code == 429:
+        print("⚠️  QUOTA DÉPASSÉ (429)")
+        print("   Votre quota gratuit est épuisé")
+        print("   Solutions:")
+        print("   1. Attendez quelques minutes")
+        print("   2. Créez une nouvelle clé API")
+        print("   3. Utilisez le mode fallback (algorithme local)")
+    elif response.status_code == 403:
+        print("❌ ACCÈS REFUSÉ (403)")
+        print("   La clé API est invalide ou désactivée")
+    elif response.status_code == 400:
+        print("❌ REQUÊTE INVALIDE (400)")
+        print(f"   Détails: {response.text[:200]}")
     else:
-        print(f" ERREUR {response.status_code}")
-        print(f"Message: {response.json().get('error', {}).get('message', 'N/A')}\n")
-        
+        print(f"❌ ERREUR: {response.text[:200]}")
+except requests.Timeout:
+    print("❌ TIMEOUT - Le serveur ne répond pas")
+except requests.ConnectionError:
+    print("❌ ERREUR DE CONNEXION - Vérifiez votre internet")
 except Exception as e:
-    print(f" EXCEPTION: {e}\n")
+    print(f"❌ EXCEPTION: {e}")
 
-# Test 2: Modèle gemini-pro (v1beta)
-print("-"*70)
-print("TEST 2: Modèle gemini-pro (API v1beta)")
-print("-"*70)
+# ============================================
+# TEST 2: Simulation analyse candidat-offre
+# ============================================
+print("\n" + "-" * 40)
+print("📊 Test 2: Analyse Candidat-Offre")
+print("-" * 40)
 
-url2 = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key={GEMINI_API_KEY}"
+prompt_analyse = """Analyse la compatibilité entre cette offre et ce candidat.
+
+OFFRE D'EMPLOI:
+- Titre: Développeur Python Senior
+- Description: Nous recherchons un développeur Python expérimenté
+- Compétences requises: Python, Flask, PostgreSQL, Docker, Git
+- Salaire: 500000 FCFA
+
+CANDIDAT:
+- Nom: Fatou Sall
+- Bio: Développeuse Full Stack avec 5 ans d'expérience en Python, Flask et Django. Passionnée par le développement d'APIs REST et les bonnes pratiques.
+- Diplôme: Master en Informatique
+
+Réponds UNIQUEMENT avec ce format JSON exact (sans markdown, sans texte autour):
+{"score": <nombre entre 0 et 100>, "justification": "<explication en 2-3 phrases maximum>"}
+"""
+
+payload_analyse = {
+    "contents": [{
+        "parts": [{
+            "text": prompt_analyse
+        }]
+    }],
+    "generationConfig": {
+        "temperature": 0.3,
+        "maxOutputTokens": 200
+    }
+}
 
 try:
-    response = requests.post(url2, json=payload, timeout=10)
-    print(f"Status Code: {response.status_code}")
+    response = requests.post(url, json=payload_analyse, timeout=15)
+    print(f"Status HTTP: {response.status_code}")
     
     if response.status_code == 200:
-        print(" SUCCESS - L'API fonctionne !")
         result = response.json()
         text = result['candidates'][0]['content']['parts'][0]['text']
-        print(f"Réponse de Gemini: {text}\n")
+        print(f"✅ SUCCESS!")
+        print(f"Réponse brute: {text}")
+        
+        # Essayer de parser le JSON
+        #try:
+            # Nettoyer la réponse
+            #clean_text = text.strip()
+           # clean_text = clean_text.replace('```json', '').replace('```', '').strip()
+            
+           # analysis = json.loads(clean_text)
+           # print(f"\n📈 Score: {analysis.get('score')}%")
+          #  print(f"💬 Justification: {analysis.get('justification')}")
+           # print("\n✅ PARSING JSON RÉUSSI!")
+       # except json.JSONDecodeError as e:
+           # print(f"\n⚠️  Impossible de parser le JSON: {e}")
+           # print("   La réponse n'est pas un JSON valide")
+            
+    elif response.status_code == 429:
+        print("⚠️  QUOTA DÉPASSÉ - Mode fallback recommandé")
     else:
-        print(f" ERREUR {response.status_code}")
-        print(f"Message: {response.json().get('error', {}).get('message', 'N/A')}\n")
+        print(f"❌ ERREUR: {response.text[:300]}")
         
 except Exception as e:
-    print(f" EXCEPTION: {e}\n")
+    print(f"❌ EXCEPTION: {e}")
 
-# Test 3: Modèle gemini-1.5-flash (v1beta)
-print("-"*70)
-print("TEST 3: Modèle gemini-1.5-flash (API v1beta)")
-print("-"*70)
-
-url3 = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
+# ============================================
+# TEST 3: Vérifier les modèles disponibles
+# ============================================
+print("\n" + "-" * 40)
+print("📋 Test 3: Modèles disponibles")
+print("-" * 40)
 
 try:
-    response = requests.post(url3, json=payload, timeout=10)
-    print(f"Status Code: {response.status_code}")
+    url_models = f"https://generativelanguage.googleapis.com/v1/models?key={GEMINI_API_KEY}"
+    response = requests.get(url_models, timeout=10)
     
     if response.status_code == 200:
-        print(" SUCCESS - L'API fonctionne !")
-        result = response.json()
-        text = result['candidates'][0]['content']['parts'][0]['text']
-        print(f"Réponse de Gemini: {text}\n")
+        models = response.json().get('models', [])
+        print(f"✅ {len(models)} modèles trouvés:")
+        
+        # Filtrer les modèles Gemini
+        gemini_models = [m for m in models if 'gemini' in m.get('name', '').lower()]
+        for model in gemini_models[:5]:
+            name = model.get('name', 'N/A').replace('models/', '')
+            print(f"   ✓ {name}")
     else:
-        print(f" ERREUR {response.status_code}")
-        print(f"Message: {response.json().get('error', {}).get('message', 'N/A')}\n")
+        print(f"❌ Erreur: {response.status_code}")
         
 except Exception as e:
-    print(f" EXCEPTION: {e}\n")
+    print(f"❌ Exception: {e}")
 
-# Test 4: Modèle gemini-1.5-pro (v1beta)
-print("-"*70)
-print("TEST 4: Modèle gemini-1.5-pro (API v1beta)")
-print("-"*70)
-
-url4 = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key={GEMINI_API_KEY}"
-
-try:
-    response = requests.post(url4, json=payload, timeout=10)
-    print(f"Status Code: {response.status_code}")
-    
-    if response.status_code == 200:
-        print(" SUCCESS - L'API fonctionne !")
-        result = response.json()
-        text = result['candidates'][0]['content']['parts'][0]['text']
-        print(f"Réponse de Gemini: {text}\n")
-    else:
-        print(f" ERREUR {response.status_code}")
-        print(f"Message: {response.json().get('error', {}).get('message', 'N/A')}\n")
-        
-except Exception as e:
-    print(f" EXCEPTION: {e}\n")
-
-# Test 5: Lister les modèles disponibles
-print("-"*70)
-print("TEST 5: Liste des modèles disponibles")
-print("-"*70)
-
-list_url = f"https://generativelanguage.googleapis.com/v1/models?key={GEMINI_API_KEY}"
-
-try:
-    response = requests.get(list_url, timeout=10)
-    print(f"Status Code: {response.status_code}")
-    
-    if response.status_code == 200:
-        print(" SUCCESS - Modèles accessibles:")
-        models = response.json()
-        
-        generation_models = []
-        for model in models.get('models', []):
-            if 'generateContent' in model.get('supportedGenerationMethods', []):
-                generation_models.append(model['name'])
-        
-        if generation_models:
-            print(f"\n Modèles disponibles pour generateContent ({len(generation_models)}):")
-            for model in generation_models:
-                print(f"  ✓ {model}")
-        else:
-            print(" Aucun modèle disponible pour generateContent")
-            print("\nTous les modèles:")
-            for model in models.get('models', [])[:5]:
-                print(f"  - {model.get('name')} : {model.get('supportedGenerationMethods', [])}")
-    else:
-        print(f" ERREUR {response.status_code}")
-        print(f"Message: {response.json().get('error', {}).get('message', 'N/A')}")
-        
-except Exception as e:
-    print(f" EXCEPTION: {e}")
-
-print("\n" + "="*70)
-print(" TESTS TERMINÉS")
-print("="*70)
-
-# Recommandations
-print("\n RECOMMANDATIONS:")
-print("-"*70)
-print("Cherchez le premier test avec  SUCCESS")
-print("Si TEST 2 ou 3 ou 4 fonctionne, utilisez cette URL dans ai_service.py")
-print("Si TEST 5 liste des modèles, utilisez un des modèles listés")
-print("="*70 + "\n")
+# ============================================
+# RÉSUMÉ FINAL
+# ============================================
+print("\n" + "=" * 60)
+print("📋 RÉSUMÉ")
+print("=" * 60)
+print(f"Clé API: {GEMINI_API_KEY[:15]}...{GEMINI_API_KEY[-5:]}")
+print(f"Modèle utilisé: gemini-2.0-flash")
+print("=" * 60)

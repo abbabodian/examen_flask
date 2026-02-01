@@ -1,11 +1,15 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, send_from_directory
+from flask_cors import CORS
 from config import Config
 from models import db, init_models
 from schemas import ma
 
 def create_app():
-    app = Flask(__name__)
+    app = Flask(__name__, static_folder='static', static_url_path='')
     app.config.from_object(Config)
+    
+    # Activer CORS pour les requêtes frontend
+    CORS(app)
     
     # Initialiser les extensions
     db.init_app(app)
@@ -16,7 +20,7 @@ def create_app():
         # Importer les modèles AVANT de créer les tables
         init_models()
         db.create_all()
-        print(" Base de données initialisée")
+        print("✅ Base de données initialisée")
     
     # Enregistrer les blueprints APRÈS l'initialisation des modèles
     from routes import register_blueprints
@@ -59,9 +63,14 @@ def create_app():
         }), 409
     # =============================================
     
-    # Route de test
+    # Route pour servir le frontend
     @app.route('/')
     def index():
+        return send_from_directory('static', 'index.html')
+    
+    # Route API info
+    @app.route('/api')
+    def api_info():
         return jsonify({
             "message": "Smart-Recruit API",
             "version": "1.0.0",
@@ -79,5 +88,11 @@ def create_app():
 
 if __name__ == '__main__':
     app = create_app()
-    print(" Serveur démarré sur http://localhost:5000")
+    print("\n" + "="*70)
+    print("🚀 Smart-Recruit API + Frontend démarrée !")
+    print("="*70)
+    print("📱 Frontend:  http://localhost:5000")
+    print("🔧 API Info:  http://localhost:5000/api")
+    print("📚 Endpoints: http://localhost:5000/api/candidates, /api/offers, etc.")
+    print("="*70 + "\n")
     app.run(debug=True, host='0.0.0.0', port=5000)

@@ -6,7 +6,7 @@ import random
 
 load_dotenv()
 
-GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
+GEMINI_API_KEY = os.getenv('GEMINI_API_KEY', 'votre_clé_api_gemini_ici')
 
 class AIService:
     
@@ -38,7 +38,7 @@ class AIService:
         """Essayer d'appeler Gemini API"""
         try:
             # URL avec le modèle gemini-2.0-flash
-            url = f"https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key={GEMINI_API_KEY}"
+            url = f"https://openrouter.ai/api/v1?key={GEMINI_API_KEY}"
             
             prompt = f"""Analyse la compatibilité entre cette offre d'emploi et ce candidat.
 

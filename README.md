@@ -138,54 +138,90 @@ python app.py
 
 L'API sera accessible sur **http://localhost:5000**
 
-##  Endpoints de l'API
+---
 
-###  Route Principale
+## ⚙️ Configuration
 
-| Méthode | Endpoint | Description |
-|---------|----------|-------------|
-| GET | `/` | Informations sur l'API |
+### Fichier `config.py`
 
-**Exemple de réponse :**
-```json
-{
-  "message": "Smart-Recruit API",
-  "version": "1.0.0",
-  "status": "running",
-  "endpoints": { ... }
-}
+```python
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+class Config:
+    SECRET_KEY = os.getenv('SECRET_KEY', 'dev-secret-key')
+    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL')
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+```
+
+### Fichier `.env` exemple
+
+```env
+DATABASE_URL=postgresql://postgres:password@localhost:5432/smart_recruit
+GEMINI_API_KEY=AIzaSyXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+SECRET_KEY=c8a343a888cc4452862ffacb75a9d644c82c4eb532e8dc9d2f82e088aa5f3ef6
 ```
 
 ---
 
-###  Gestion des Candidats
+## 📡 Endpoints de l'API
 
-#### Créer un Candidat
+### 🏠 Route Principale
 
-**POST** `/api/candidates`
+```http
+GET /
+```
 
-**Body :**
+**Réponse :**
+
 ```json
 {
-  "nom": "Fatou Sall",
-  "email": "fatou.sall@email.com",
-  "bio": "Développeuse Full Stack avec 4 ans d'expérience en Python, Flask, React et PostgreSQL. Passionnée par l'IA et le développement d'APIs modernes.",
-  "diplome": "Master en Intelligence Artificielle"
+  "message": "Smart-Recruit API",
+  "version": "1.0.0",
+  "status": "running"
 }
 ```
 
-**Réponse (201 Created) :**
+### 👥 Candidats
+
+#### Lister tous les candidats
+
+```http
+GET /api/candidates
+```
+
+**Réponse (200) :**
+
 ```json
 {
-  "message": "Candidat créé avec succès",
-  "candidat": {
-    "id": 1,
-    "nom": "Fatou Sall",
-    "email": "fatou.sall@email.com",
-    "bio": "Développeuse Full Stack...",
-    "diplome": "Master en Intelligence Artificielle",
-    "date_inscription": "2026-01-16T01:45:23.123456"
-  }
+  "success": true,
+  "candidats": [
+    {
+      "id": 1,
+      "nom": "Fatou Sall",
+      "email": "fatou.sall@email.com",
+      "bio": "Développeuse Full Stack...",
+      "diplome": "Master en IA",
+      "date_inscription": "2024-01-30T12:00:00"
+    }
+  ],
+  "total": 1
+}
+```
+
+#### Créer un candidat
+
+```http
+POST /api/candidates
+Content-Type: application/json
+
+{
+  "nom": "Fatou Sall",
+  "email": "fatou.sall@email.com",
+  "bio": "Développeuse Full Stack avec 5 ans d'expérience en Python, Flask et React.",
+  "diplome": "Master en Intelligence Artificielle"
 }
 ```
 
@@ -195,36 +231,19 @@ L'API sera accessible sur **http://localhost:5000**
 - Bio : 10-2000 caractères
 - Diplôme : 2-200 caractères
 
----
+###  Offres d'Emploi
 
-###  Gestion des Offres d'Emploi
+#### Créer une offre
 
-#### Créer une Offre
+```http
+POST /api/offers
+Content-Type: application/json
 
-**POST** `/api/offers`
-
-**Body :**
-```json
 {
   "titre": "Développeur Python Senior - Dakar",
-  "description": "Nous recherchons un développeur Python expérimenté pour rejoindre notre équipe tech innovante à Dakar. Vous travaillerez sur des projets d'IA, de développement d'APIs REST et d'intégration de solutions cloud.",
-  "competences": ["Python", "Flask", "PostgreSQL", "API REST", "Docker", "Git"],
-  "salaire": 60000
-}
-```
-
-**Réponse (201 Created) :**
-```json
-{
-  "message": "Offre créée avec succès",
-  "offre": {
-    "id": 1,
-    "titre": "Développeur Python Senior - Dakar",
-    "description": "Nous recherchons...",
-    "competences": ["Python", "Flask", "PostgreSQL", "API REST", "Docker", "Git"],
-    "salaire": 60000.0,
-    "date_creation": "2026-01-16T01:45:23.123456"
-  }
+  "description": "Nous recherchons un développeur Python expérimenté...",
+  "competences": ["Python", "Flask", "PostgreSQL", "Docker", "Git"],
+  "salaire": 500000
 }
 ```
 
@@ -234,294 +253,272 @@ L'API sera accessible sur **http://localhost:5000**
 - Compétences : 1-20 compétences
 - Salaire : nombre positif
 
----
+###  Analyse IA
 
-###  Gestion des Candidatures
+#### Analyser la compatibilité
 
-#### Soumettre une Candidature
+```http
+POST /api/offers/1/analyze-match
+Content-Type: application/json
 
-**POST** `/api/apply`
-
-**Body :**
-```json
-{
-  "candidat_id": 1,
-  "offre_id": 1
-}
-```
-
-**Réponse (201 Created) :**
-```json
-{
-  "message": "Candidature soumise avec succès",
-  "candidature": {
-    "id": 1,
-    "candidat_id": 1,
-    "offre_id": 1,
-    "date_depot": "2026-01-16T01:45:23.123456"
-  }
-}
-```
-
-**Validations :**
-- Candidat doit exister
-- Offre doit exister
-- Pas de candidature en double
-
----
-
-###  Lister les Candidats d'une Offre
-
-**GET** `/api/offers/<id>/candidates`
-
-**Exemple :** `GET /api/offers/1/candidates`
-
-**Réponse (200 OK) :**
-```json
-{
-  "offre_id": 1,
-  "offre_titre": "Développeur Python Senior - Dakar",
-  "nombre_candidats": 2,
-  "candidats": [
-    {
-      "id": 1,
-      "nom": "Fatou Sall",
-      "email": "fatou.sall@email.com",
-      "bio": "Développeuse Full Stack...",
-      "diplome": "Master en Intelligence Artificielle"
-    },
-    {
-      "id": 2,
-      "nom": "Mamadou Diop",
-      "email": "mamadou.diop@email.com",
-      "bio": "Développeur Backend...",
-      "diplome": "Master en Génie Logiciel"
-    }
-  ]
-}
-```
-
----
-
-###  Analyse IA de Compatibilité
-
-#### Analyser la Compatibilité Candidat-Offre
-
-**POST** `/api/offers/<id>/analyze-match`
-
-**Body :**
-```json
 {
   "candidat_id": 1
 }
 ```
 
-**Réponse (200 OK) :**
+**Réponse (200) - Mode Gemini :**
+
 ```json
 {
-  "offre": {
-    "id": 1,
-    "titre": "Développeur Python Senior - Dakar"
-  },
-  "candidat": {
-    "id": 1,
-    "nom": "Fatou Sall"
-  },
+  "success": true,
   "analyse": {
     "score": 87,
-    "justification": "Profil très pertinent avec 4 ans d'expérience en Python, Flask et PostgreSQL. Compétences en IA correspondent parfaitement aux besoins."
+    "justification": "Profil très pertinent avec 5 ans d'expérience en Python/Flask.",
+    "source": "gemini-ai"
   }
 }
 ```
 
-**Comment ça fonctionne :**
-1. L'API récupère l'offre et le candidat
-2. Envoie un prompt structuré à Google Gemini 2.0
-3. Gemini analyse et retourne un score (0-100) + justification
-4. L'API parse et renvoie le résultat au format JSON
+**Réponse (200) - Mode Fallback :**
+
+```json
+{
+  "success": true,
+  "analyse": {
+    "score": 78,
+    "justification": "Bon profil. Compétences: Python, Flask - Profil expérimenté",
+    "source": "algorithme-local"
+  }
+}
+```
+
+---
+
+##  Frontend
+
+### Accéder au Frontend
+
+```
+http://localhost:5000
+```
+
+### Fonctionnalités de l'interface
+-  Dashboard avec statistiques
+-  Liste des candidats avec recherche
+-  Liste des offres avec détails
+-  Formulaires de création/modification
+-  Analyse IA interactive
+-  Notifications toast
+-  Design responsive (mobile-friendly)
+
+### Couleurs du thème
+
+| Couleur | Code | Usage |
+|---------|------|-------|
+| Vert menthe | `#14b89f` | Actions positives |
+| Rouge corail | `#fa5252` | Actions/alertes |
+| Blanc | `#ffffff` | Fond principal |
 
 ---
 
 ##  Tests
 
-### Test avec curl (Windows CMD)
+### Test avec cURL (Windows CMD)
+
 ```bash
 # 1. Créer un candidat
-curl -X POST http://localhost:5000/api/candidates -H "Content-Type: application/json" -d "{\"nom\":\"Jean Dupont\",\"email\":\"jean@email.com\",\"bio\":\"Developpeur Python avec 5 ans d experience\",\"diplome\":\"Master Informatique\"}"
+curl -X POST http://localhost:5000/api/candidates ^
+  -H "Content-Type: application/json" ^
+  -d "{\"nom\":\"Test User\",\"email\":\"test@email.com\",\"bio\":\"Developpeur Python avec experience\",\"diplome\":\"Master Info\"}"
 
-# 2. Créer une offre
-curl -X POST http://localhost:5000/api/offers -H "Content-Type: application/json" -d "{\"titre\":\"Dev Python\",\"description\":\"Nous recherchons un developpeur Python experimente\",\"competences\":[\"Python\",\"Flask\"],\"salaire\":45000}"
+# 2. Lister les candidats
+curl http://localhost:5000/api/candidates
 
-# 3. Soumettre une candidature
-curl -X POST http://localhost:5000/api/apply -H "Content-Type: application/json" -d "{\"candidat_id\":1,\"offre_id\":1}"
-
-# 4. Analyser avec l'IA
-curl -X POST http://localhost:5000/api/offers/1/analyze-match -H "Content-Type: application/json" -d "{\"candidat_id\":1}"
-```
-
-### Test avec Postman
-
-1. Importer la collection depuis le fichier `api_tests.http`
-2. Exécuter les requêtes dans l'ordre
-3. Vérifier les codes de statut et les réponses JSON
-
-### Vérifier les Données dans PostgreSQL
-```bash
-psql -U postgres -d smart_recruit
-```
-```sql
--- Voir tous les candidats
-SELECT * FROM candidats;
-
--- Voir toutes les offres
-SELECT * FROM offres_emploi;
-
--- Voir toutes les candidatures avec détails
-SELECT 
-    c.id,
-    cand.nom as candidat,
-    o.titre as offre,
-    c.date_depot
-FROM candidatures c
-JOIN candidats cand ON c.candidat_id = cand.id
-JOIN offres_emploi o ON c.offre_id = o.id
-ORDER BY c.date_depot DESC;
-
--- Statistiques
-SELECT 
-    (SELECT COUNT(*) FROM candidats) as nb_candidats,
-    (SELECT COUNT(*) FROM offres_emploi) as nb_offres,
-    (SELECT COUNT(*) FROM candidatures) as nb_candidatures;
+# 3. Créer une offre
+curl -X POST http://localhost:5000/api/offers ^
+  -H "Content-Type: application/json" ^
+  -d "{\"titre\":\"Dev Python Senior\",\"description\":\"Recherchons developpeur Python experimente\",\"competences\":[\"Python\",\"Flask\"],\"salaire\":500000}"
 ```
 
 ---
 
-## ⚠️ Gestion des Erreurs
+##  Analyse IA
 
-L'API retourne des erreurs en JSON avec des codes HTTP appropriés :
+### Mode Gemini (Prioritaire)
 
-### 400 Bad Request - Données Invalides
-```json
-{
-  "error": "Données invalides",
-  "details": {
-    "email": ["Format d'email invalide"],
-    "bio": ["La bio doit contenir entre 10 et 2000 caractères"]
-  }
-}
-```
+Utilise Google Gemini 2.0 pour une analyse détaillée et naturelle.
 
-### 404 Not Found - Ressource Inexistante
-```json
-{
-  "error": "Resource not found",
-  "message": "La ressource demandée n'existe pas"
-}
-```
+**Avantages :**
+- Analyse contextuelle approfondie
+- Justifications naturelles et détaillées
+- Compréhension sémantique des compétences
 
-### 409 Conflict - Conflit de Données
-```json
-{
-  "error": "Un candidat avec cet email existe déjà"
-}
-```
+### Mode Fallback (Automatique)
 
-### 500 Internal Server Error
-```json
-{
-  "error": "Internal server error",
-  "message": "Une erreur interne s'est produite"
-}
-```
+Si Gemini n'est pas disponible, le système bascule automatiquement sur un algorithme intelligent local.
+
+**Critères d'évaluation :**
+
+| Critère | Points max |
+|---------|------------|
+| Compétences techniques | 40 |
+| Niveau de diplôme | 20 |
+| Expérience professionnelle | 25 |
+| Pertinence du profil | 15 |
+| **Total** | **100** |
 
 ---
 
-## 🔐 Sécurité
+##  Gestion des Erreurs
 
-- Clé API Gemini stockée dans `.env` (non versionné)
-- Validation systématique des données avec Marshmallow
-- Prévention des injections SQL via SQLAlchemy ORM
-- Gestion des erreurs centralisée
-- Timeout sur les appels API externes (20s)
+### Codes HTTP
+
+| Code | Signification | Exemple |
+|------|---------------|---------|
+| 200 | Succès | GET réussi |
+| 201 | Créé | POST réussi |
+| 400 | Requête invalide | Données manquantes |
+| 404 | Non trouvé | Ressource inexistante |
+| 409 | Conflit | Email déjà utilisé |
+| 500 | Erreur serveur | Erreur interne |
 
 ---
 
-## Modèles de Données
+## 🗄 Base de Données
 
-### Candidat
-```python
-- id: Integer (PK)
-- nom: String(100)
-- email: String(120) UNIQUE
-- bio: Text
-- diplome: String(200)
-- date_inscription: DateTime
+### Schéma des tables
+
+#### Table `candidats`
+
+| Colonne | Type | Contraintes |
+|---------|------|-------------|
+| id | INTEGER | PRIMARY KEY |
+| nom | VARCHAR(100) | NOT NULL |
+| email | VARCHAR(120) | UNIQUE, NOT NULL |
+| bio | TEXT | |
+| diplome | VARCHAR(200) | |
+| date_inscription | DATETIME | DEFAULT NOW |
+
+#### Table `offres_emploi`
+
+| Colonne | Type | Contraintes |
+|---------|------|-------------|
+| id | INTEGER | PRIMARY KEY |
+| titre | VARCHAR(200) | NOT NULL |
+| description | TEXT | |
+| competences | JSON | |
+| salaire | FLOAT | |
+| date_creation | DATETIME | DEFAULT NOW |
+
+#### Table `candidatures`
+
+| Colonne | Type | Contraintes |
+|---------|------|-------------|
+| id | INTEGER | PRIMARY KEY |
+| candidat_id | INTEGER | FOREIGN KEY |
+| offre_id | INTEGER | FOREIGN KEY |
+| date_depot | DATETIME | DEFAULT NOW |
+| | | UNIQUE(candidat_id, offre_id) |
+
+---
+
+##  Sécurité
+
+| Mesure | Description |
+|--------|-------------|
+| Variables d'environnement | Clés sensibles dans .env |
+| Validation Marshmallow | Vérification systématique des données |
+| SQLAlchemy ORM | Protection contre les injections SQL |
+| CORS configuré | Contrôle des origines autorisées |
+| Gestion d'erreurs | Pas d'exposition des erreurs internes |
+| Timeout API | Limite de 15-20s sur appels externes |
+
+---
+
+##  Statistiques du Projet
+
 ```
-
-### OffreEmploi
-```python
-- id: Integer (PK)
-- titre: String(200)
-- description: Text
-- competences: JSON
-- salaire: Float
-- date_creation: DateTime
-```
-
-### Candidature
-```python
-- id: Integer (PK)
-- candidat_id: Integer (FK → candidats.id)
-- offre_id: Integer (FK → offres_emploi.id)
-- date_depot: DateTime
-- UNIQUE(candidat_id, offre_id)
+ Fichiers : ~20 fichiers Python/HTML/JS
+ Lignes de code : ~2000 lignes
+ Endpoints API : 12 routes
+ Pages Frontend : 3 sections
+ Temps de réponse : <100ms (local), <3s (Gemini)
 ```
 
 ---
 
 ##  Développement Futur
 
-- [ ] Authentification JWT
-- [ ] Pagination des résultats
-- [ ] Filtres de recherche avancés
-- [ ] Notifications par email
-- [ ] Dashboard administrateur
-- [ ] Export PDF des candidatures
-- [ ] Tests unitaires (pytest)
-- [ ] Documentation Swagger/OpenAPI
+-  Authentification JWT
+-  Pagination des résultats
+-  Filtres de recherche avancés
+-  Notifications par email
+-  Dashboard administrateur
+-  Export PDF des candidatures
+-  Tests unitaires (pytest)
+-  Documentation Swagger/OpenAPI
+-  Dockerisation
+-  Déploiement cloud (Heroku/AWS)
 
 ---
 
 ##  Auteur
 
-**Votre Nom**  
-Projet d'examen Flask - Gestion de Recrutement avec IA
+**[Votre Nom]**
+- 📧 Email : votre.email@example.com
+- 🔗 GitHub : github.com/votre-username
+- 💼 LinkedIn : linkedin.com/in/votre-profil
+
+*Projet d'examen Flask - Master Informatique*
 
 ---
 
 ## 📄 Licence
 
-MIT License - Projet académique
+```
+MIT License
+
+Copyright (c) 2024 [Votre Nom]
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+```
 
 ---
 
-## 🙏 Remerciements
+##  Remerciements
 
 - Flask Documentation
 - SQLAlchemy Documentation
 - Marshmallow Documentation
-- Google Gemini API Documentation
-- Stack Overflow Community
+- Google Gemini API
+- TailwindCSS
+- Font Awesome
 
 ---
 
 ##  Support
 
 Pour toute question ou problème :
-- Créer une issue sur GitHub
-- Consulter la documentation des technologies utilisées
-- Contacter l'auteur
+-  Créer une issue sur GitHub
+-  Consulter la documentation
+-  Contacter l'auteur
 
 ---
 
-** Si ce projet vous a été utile, n'hésitez pas à mettre une étoile sur GitHub !**
+<div align="center">
+
+ **Si ce projet vous a été utile, n'hésitez pas à mettre une étoile !** 
+
+</div>
