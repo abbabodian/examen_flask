@@ -18,6 +18,7 @@ Smart-Recruit est une API REST qui permet à un cabinet de recrutement de :
 - **Flask-Marshmallow** 0.15.0 - Validation et sérialisation des données
 - **Google Gemini 2.0** - Intelligence artificielle pour l'analyse de compatibilité
 - **Python** 3.13
+--pip install psycopg2-binary  
 
 ##  Fonctionnalités
 
@@ -125,7 +126,7 @@ CREATE DATABASE smart_recruit;
 Créer un fichier `.env` à la racine du projet :
 ```env
 DATABASE_URL=postgresql://postgres:abba@localhost:5432/smart_recruit
-GEMINI_API_KEY= AIzaSyB4bV3STl3xoQPGQ6Hwfh2RKp_NGTWBllY (nombre quota atteint)
+GEMINI_API_KEY= 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
 SECRET_KEY=c8a343a888cc4452862ffacb75a9d644c82c4eb532e8dc9d2f82e088aa5f3ef6
 ```
 

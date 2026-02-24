@@ -5,6 +5,7 @@ from schemas.candidat_schema import candidat_schema, candidats_schema
 from marshmallow import ValidationError
 from sqlalchemy.exc import IntegrityError
 
+# Blueprint pour les routes liées aux candidats
 candidat_bp = Blueprint('candidat', __name__)
 
 # ========================================
@@ -12,7 +13,7 @@ candidat_bp = Blueprint('candidat', __name__)
 # ========================================
 @candidat_bp.route('/candidates', methods=['GET'])
 def get_all_candidates():
-    """GET /api/candidates - Récupérer tous les candidats"""
+    # Récupérer tous les candidats
     try:
         candidats = Candidat.query.order_by(Candidat.date_inscription.desc()).all()
         
@@ -33,7 +34,7 @@ def get_all_candidates():
 # ========================================
 @candidat_bp.route('/candidates/<int:id>', methods=['GET'])
 def get_candidate(id):
-    """GET /api/candidates/<id> - Récupérer un candidat"""
+    # Récupérer un candidat par son ID
     try:
         candidat = Candidat.query.get(id)
         
@@ -59,7 +60,7 @@ def get_candidate(id):
 # ========================================
 @candidat_bp.route('/candidates', methods=['POST'])
 def creer_candidat():
-    """POST /api/candidates - Inscription d'un candidat"""
+    # Création d'un nouveau candidat
     try:
         json_data = request.get_json()
         
@@ -69,7 +70,7 @@ def creer_candidat():
                 "error": "Données JSON requises"
             }), 400
         
-        # Validation des données avec Marshmallow
+        # Validation avec Marshmallow
         try:
             candidat = candidat_schema.load(json_data)
         except ValidationError as e:
@@ -87,7 +88,7 @@ def creer_candidat():
                 "error": "Un candidat avec cet email existe déjà"
             }), 409
         
-        # Créer le candidat
+        # Enregistrement en base
         db.session.add(candidat)
         db.session.commit()
         
@@ -115,7 +116,7 @@ def creer_candidat():
 # ========================================
 @candidat_bp.route('/candidates/<int:id>', methods=['PUT'])
 def update_candidate(id):
-    """PUT /api/candidates/<id> - Modifier un candidat"""
+    # Mise à jour d'un candidat existant
     try:
         candidat = Candidat.query.get(id)
         
@@ -133,11 +134,11 @@ def update_candidate(id):
                 "error": "Données JSON requises"
             }), 400
         
-        # Mise à jour des champs
+        # Mise à jour des champs autorisés
         if 'nom' in json_data:
             candidat.nom = json_data['nom']
         if 'email' in json_data:
-            # Vérifier unicité du nouvel email
+            # Vérification de l'unicité de l'email
             existing = Candidat.query.filter(
                 Candidat.email == json_data['email'],
                 Candidat.id != id
@@ -173,7 +174,7 @@ def update_candidate(id):
 # ========================================
 @candidat_bp.route('/candidates/<int:id>', methods=['DELETE'])
 def delete_candidate(id):
-    """DELETE /api/candidates/<id> - Supprimer un candidat"""
+    # Suppression d'un candidat
     try:
         candidat = Candidat.query.get(id)
         
